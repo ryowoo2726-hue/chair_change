@@ -1,0 +1,26 @@
+{
+  "name": "chair-change",
+  "version": "1.4.8",
+  "description": "마석중학교 학생 자리배치 앱",
+  "main": "main.js",
+  "author": "ryowoo2726-hue",
+  "license": "UNLICENSED",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ryowoo2726-hue/chair_change.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test tests/*.test.cjs",
+    "dist": "electron-builder --win nsis --x64 --publish never",
+    "publish": "electron-builder --win nsis --x64 --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.3"
+  },
+  "devDependencies": {
+    "electron": "^44.1.0",
+    "electron-builder": "^26.0.12"
+  }
+}

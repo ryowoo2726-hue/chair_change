@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="교실 자리 배치 앱">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+    <title>2학년 2반 자리 배치</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="app-header"><div class="header-inner">
+        <div class="brand-group"><span class="school-badge">마석중학교</span><h1 class="app-title">2학년 2반 <span class="highlight">자리 배치</span></h1></div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="btnManageStudents">👥 명단 관리</button>
+            <button class="btn btn-secondary" id="btnFixedSeats">📌 앞자리·고정석</button>
+            <button class="btn btn-secondary" id="btnCheckUpdate">업데이트 확인</button>
+            <button class="btn btn-secondary" id="btnPrint">🖨 인쇄</button>
+            <button class="btn btn-icon" id="btnSoundToggle">🔊</button>
+        </div>
+    </div></header>
+    <section class="control-bar">
+        <div class="control-inner">
+            <div class="mode-selector-group"><span class="mode-label">배치 모드</span>
+                <div class="mode-buttons">
+                    <button class="mode-btn active" data-mode="random" aria-pressed="true">완전 랜덤</button>
+                    <button class="mode-btn" data-mode="col_gender" aria-pressed="false">남녀 세로줄</button>
+                    <button class="mode-btn" data-mode="row_gender" aria-pressed="false">남녀 가로줄</button>
+                    <button class="mode-btn" data-mode="pair" aria-pressed="false">짝 배치</button>
+                </div>
+                <button class="btn btn-outline" id="btnToggleGenderStart" hidden>시작: 여학생</button>
+                <label class="pair-options" id="pairOptions" hidden>짝 구성
+                    <select class="form-input" id="pairGender">
+                        <option value="random">모두 랜덤</option>
+                        <option value="same">남남·여여</option>
+                    </select>
+                </label>
+            </div>
+            <div class="quick-stats" id="statInfo"></div>
+            <div class="repeat-shuffle-control">
+                <label for="shuffleRepeatCount">재배치</label>
+                <input id="shuffleRepeatCount" type="number" min="1" max="30" value="1" inputmode="numeric">
+                <span>회</span>
+                <button class="btn btn-success" id="btnShuffle">🎲 새로 자리 배치</button>
+            </div>
+        </div>
+        <div class="sync-line" id="appStatus" role="status" aria-live="polite"></div>
+    </section>
+    <main class="main-content">
+        <div class="chalkboard-stage">
+            <div class="chalk-title">칠판 (BLACKBOARD)</div><div class="podium-indicator">교탁</div>
+            <div class="viewpoint-switch"><button class="btn btn-secondary" id="btnToggleView">시점: 교사 기준</button></div>
+        </div>
+        <p class="drag-help">학생 카드를 다른 자리로 끌어 놓으면 그 자리에 고정됩니다. 📌을 누르면 고정/해제됩니다.</p>
+        <div class="desk-matrix-wrapper"><div class="desk-grid" id="deskGrid"></div></div>
+    </main>
+    <footer class="floating-action-dock">
+        <div class="reveal-progress-container" hidden><div class="reveal-progress-bar"><div class="reveal-progress-fill" id="revealProgressFill"></div></div><span id="revealProgressText">0/0</span></div>
+        <span class="footer-hint">설정한 횟수만큼 재배치하며, 마지막 결과가 저장됩니다.</span>
+        <span class="version-label" id="versionLabel"></span>
+    </footer>
+    <div class="modal-backdrop" id="studentModal"><div class="modal-window" role="dialog" aria-labelledby="rosterTitle">
+        <div class="modal-header"><h2 class="modal-title" id="rosterTitle">명단과 배치 조건</h2><button class="modal-close" data-close="studentModal" aria-label="닫기">&times;</button></div>
+        <div class="modal-body">
+            <label class="form-label" for="studentInputArea">학생 명단</label>
+            <p class="input-hint" id="rosterFormat">한 줄에 학번, 이름, 성별(남/여)을 입력하세요. 이 PC에 저장됩니다.</p>
+            <textarea class="form-textarea roster-input" id="studentInputArea" aria-describedby="rosterFormat" spellcheck="false" placeholder="101 학생가 여&#10;102 학생나 남"></textarea>
+            <p class="input-hint" id="ruleFormat">배치 조건은 한 줄에 학번 두 개를 입력하세요. 예) 101 102</p>
+            <div class="roster-rules">
+                <div><label class="form-label" for="avoidInputArea">기피 학생</label><textarea class="form-textarea rule-input" id="avoidInputArea" aria-describedby="ruleFormat" spellcheck="false"></textarea></div>
+                <div><label class="form-label" for="adjacentInputArea">붙는 학생</label><textarea class="form-textarea rule-input" id="adjacentInputArea" aria-describedby="ruleFormat" spellcheck="false"></textarea></div>
+            </div>
+            <p class="roster-error" id="rosterError" role="alert"></p>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline" data-close="studentModal">취소</button><button class="btn btn-primary" id="btnSaveStudents">저장</button></div>
+    </div></div>
+    <div class="modal-backdrop" id="fixedModal"><div class="modal-window compact-modal">
+        <div class="modal-header"><h2 class="modal-title">📌 앞자리 희망·고정석</h2><button class="modal-close" data-close="fixedModal">&times;</button></div>
+        <div class="modal-body"><p class="input-hint">학생과 자리를 선택하면 이동하고 고정합니다. 1줄이 칠판에서 가장 가깝습니다.</p>
+            <div class="fixed-form"><label class="form-label">학생<select id="fixedStudentSelect"></select></label><label class="form-label">자리<select id="fixedSeatSelect"></select></label></div>
+            <div class="fixed-list" id="fixedList"></div>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline" id="btnClearFixed">모든 고정 해제</button><button class="btn btn-primary" id="btnApplyFixed">이동·고정</button></div>
+    </div></div>
+    <div class="modal-backdrop" id="updateModal"><div class="modal-window compact-modal">
+        <div class="modal-header"><h2 class="modal-title">앱 업데이트</h2><button class="modal-close" data-close="updateModal" aria-label="닫기">&times;</button></div>
+        <div class="modal-body">
+            <div class="update-status-box" id="updateStatusBox" role="status">업데이트 상태를 확인하는 중…</div>
+            <div class="update-progress" id="updateProgress" hidden><div id="updateProgressFill"></div></div>
+        </div>
+        <div class="modal-footer update-actions">
+            <button class="btn btn-primary" id="btnRefreshUpdates" hidden>다시 확인</button>
+            <button class="btn btn-success" id="btnDownloadUpdate" hidden>업데이트 및 재시작</button>
+            <button class="btn btn-success" id="btnInstallUpdate" hidden>재시작하여 설치</button>
+        </div>
+    </div></div>
+    <script src="sound.js"></script><script src="app.js"></script>
+</body>
+</html>

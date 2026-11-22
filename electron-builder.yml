@@ -1,0 +1,28 @@
+appId: kr.maseok.chairchange
+productName: 자리 배치
+asar: true
+files:
+  - index.html
+  - style.css
+  - app.js
+  - sound.js
+  - main.js
+  - preload.js
+  - version.json
+  - package.json
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: chair-change-${version}-setup.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+publish:
+  provider: github
+  owner: ryowoo2726-hue
+  repo: chair_change
+  releaseType: release

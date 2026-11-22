@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.log
+.env
+*.gsheet
+*.gform
+토큰*.txt
